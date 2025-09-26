@@ -17,19 +17,21 @@ import javax.sql.DataSource;
 
 @Configuration
 public class srcurity_config {
-@Bean
-SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/h2-console/**").permitAll()  // allow H2 console without login
-            .anyRequest().authenticated()                  // secure everything else
-    )
-         .formLogin(form->form.loginPage("/login").permitAll())
-         .logout(logout->logout.logoutSuccessUrl("/login").permitAll())
-         .headers(headers -> headers
-                 .frameOptions(frame -> frame.sameOrigin()))
-         .csrf(csrf->csrf.disable());
- return http.build();
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/register").permitAll()// allow H2 console without login
+                        .anyRequest().authenticated()                  // secure everything else
+                )
+                .formLogin(form -> form.loginPage("/login").permitAll())
+                .logout(logout -> logout.logoutSuccessUrl("/login").permitAll())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin()))
+                .csrf(csrf -> csrf.disable());
+        return http.build();
     }
+
     @Bean
     public JdbcUserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
         return new JdbcUserDetailsManager(dataSource);
@@ -41,11 +43,10 @@ SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     }
 
     @Bean
-public DataSource dataSource() {
+    public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
-
                 .setType(EmbeddedDatabaseType.H2)
-                .addScript(JdbcDaoImpl.DEFAULT_USER_SCHEMA_DDL_LOCATION)
+                .addScript("classpath:org/springframework/security/core/userdetails/jdbc/users.ddl")
                 .build();
     }
 }
